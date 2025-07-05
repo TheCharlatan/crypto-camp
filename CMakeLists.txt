@@ -16,7 +16,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang
 endif()
 
 # Create executable
-add_executable(crypto_course src/main.cpp)
+add_executable(crypto_course src/main.cpp
+    src/arith_uint256.cpp
+    src/hex_base.cpp
+    src/string.cpp
+    src/strencodings.cpp
+    src/uint256.cpp)
 
 # Include directories
 target_include_directories(crypto_course PRIVATE include)
