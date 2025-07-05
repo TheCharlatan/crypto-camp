@@ -49,7 +49,7 @@ constexpr std::pair<T, T> el_gamal_encrypt(
     const T counterparty_public_key)
 {
     T c_1 = fast_mod_exp(generator, ephemeral_key, modulus);
-    T c_2 = message * fast_mod_exp(counterparty_public_key, ephemeral_key, modulus) % modulus;
+    T c_2 = (message * fast_mod_exp(counterparty_public_key, ephemeral_key, modulus)) % modulus;
     return std::make_pair(c_1, c_2);
 }
 
@@ -96,42 +96,36 @@ int main() {
     assert(decrypted_message == message);
 
     // El Gamal from zipkin
-
-    // p: 15798791135088746123550015719513096545140450581792829335173644951168904821343
-    // g: 2
-    // x: 11659842551292255865086477704221272176963931918275797345620444192196778436330
-    // c1: 7855434657566654268873728025242363007386495727068873043180877667581048349284
-    // c2: 7200831034730555987102729567301480124776715457374277384349240265842775915028
-    
     const cpp_int pin_modulus{"15798791135088746123550015719513096545140450581792829335173644951168904821343"};
     const cpp_int pin_generator{"2"};
     const cpp_int pin_private_key{"11659842551292255865086477704221272176963931918275797345620444192196778436330"};
-    const cpp_int pin_public_key = fast_mod_exp(pin_generator, pin_private_key, pin_modulus);
     const cpp_int pin_c1{"7855434657566654268873728025242363007386495727068873043180877667581048349284"};
     const cpp_int pin_c2{"7200831034730555987102729567301480124776715457374277384349240265842775915028"};
     const auto pin_cyphers{std::make_pair(pin_c1, pin_c2)};
     const cpp_int pin_message(el_gamal_decrypt(pin_modulus, pin_cyphers, pin_private_key));
     std::cout << std::hex << pin_message << std::endl;
 
+    // El Gamal to zipkin
     const cpp_int tc_message{"0x3C332070696E68656164"};
+    const cpp_int zipkin_public_key{"4153687504712048616134213761716598375904898566765967820561752172170149920951"};
+    const cpp_int zipkin_modulus{"49615723209586197684920810872833175184349199614272830929806490530773652213629"};
+    std::cout << std::hex << tc_message << std::endl;
     const cpp_int big_ephemeral_key = 190000007;
-    const std::pair<cpp_int, cpp_int> tc_cypher = el_gamal_encrypt(pin_generator, pin_modulus, tc_message, big_ephemeral_key, pin_public_key);
-    std::cout << "tc c1: " << tc_cypher.first << "tc c2: " << tc_cypher.second << std::endl;
-    const cpp_int tc_decrypted_message = el_gamal_decrypt(pin_modulus, tc_cypher, pin_private_key);
-    assert(tc_decrypted_message == tc_message);
+    const std::pair<cpp_int, cpp_int> tc_cypher = el_gamal_encrypt(pin_generator, zipkin_modulus, tc_message, big_ephemeral_key, zipkin_public_key);
+    std::cout << std::dec << "tc c1: " << tc_cypher.first << " tc c2: " << tc_cypher.second << std::endl;
 
     // Textbook example, but with boost bigint
     const cpp_int big_modulus = 467;
     const cpp_int big_generator = 2;
     const cpp_int big_alice_private_key = 153;
     const cpp_int big_alice_public_key = fast_mod_exp(big_generator, big_alice_private_key, big_modulus);
-    assert(alice_public_key == 224);
+    assert(big_alice_public_key == 224);
 
     const cpp_int big_message = 331;
     const std::pair<cpp_int, cpp_int> big_cypher = el_gamal_encrypt(big_generator, big_modulus, big_message, big_ephemeral_key, big_alice_public_key);
     
     const cpp_int big_decrypted_message = el_gamal_decrypt(big_modulus, big_cypher, big_alice_private_key);
-    assert(decrypted_message == message);
+    assert(big_decrypted_message == message);
 
     return 0;
 }
